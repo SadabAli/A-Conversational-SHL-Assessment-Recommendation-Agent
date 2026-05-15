@@ -1,52 +1,111 @@
 import requests
 from bs4 import BeautifulSoup
 import json
+import time
 
-CATALOG_URL = "https://www.shl.com/solutions/products/product-catalog/"
+BASE_URL = "https://www.shl.com"
+
+CATALOG_URL = (
+    "https://www.shl.com/solutions/products/product-catalog/"
+)
 
 headers = {
     "User-Agent": "Mozilla/5.0"
 }
 
-response = requests.get(CATALOG_URL, headers=headers)
+response = requests.get(
+    CATALOG_URL,
+    headers=headers
+)
 
-print(response.status_code)
-
-soup = BeautifulSoup(response.text, "html.parser")
+soup = BeautifulSoup(
+    response.text,
+    "html.parser"
+)
 
 links = soup.find_all("a")
 
-catalog = []
+product_links = []
 
 for link in links:
 
     href = link.get("href")
 
-    text = link.get_text(strip=True)
-
     if href and "/products/" in href:
 
+        if href.startswith("/"):
+
+            href = BASE_URL + href
+
+        product_links.append(href)
+
+product_links = list(set(product_links))
+
+catalog = []
+
+for url in product_links:
+
+    try:
+
+        print(f"Scraping: {url}")
+
+        res = requests.get(
+            url,
+            headers=headers,
+            timeout=10
+        )
+
+        page = BeautifulSoup(
+            res.text,
+            "html.parser"
+        )
+
+        title = ""
+
+        if page.title:
+            title = page.title.text.strip()
+
+        description = ""
+
+        meta_desc = page.find(
+            "meta",
+            attrs={"name": "description"}
+        )
+
+        if meta_desc:
+
+            description = meta_desc.get(
+                "content",
+                ""
+            )
+
+        page_text = page.get_text(
+            separator=" ",
+            strip=True
+        )
+
         item = {
-            "name": text,
-            "url": href
+            "name": title,
+            "url": url,
+            "description": description,
+            "content": page_text[:5000]
         }
 
         catalog.append(item)
 
-unique_catalog = []
+        time.sleep(1)
 
-seen = set()
+    except Exception as e:
 
-for item in catalog:
+        print(f"Error: {e}")
 
-    if item["url"] not in seen:
+with open("app/catalog.json", "w", encoding="utf-8") as f:
 
-        seen.add(item["url"])
+    json.dump(
+        catalog,
+        f,
+        indent=2,
+        ensure_ascii=False
+    )
 
-        unique_catalog.append(item)
-
-with open("app/catalog.json", "w") as f:
-
-    json.dump(unique_catalog, f, indent=2)
-
-print(f"Saved {len(unique_catalog)} items")
+print(f"Saved {len(catalog)} assessments")
