@@ -14,18 +14,14 @@ model = genai.GenerativeModel(
     "gemini-2.5-flash"
 )
 
-
 SYSTEM_PROMPT = """
 You are an SHL assessment recommendation assistant.
 
 STRICT RULES:
-- Recommend ONLY assessments provided in catalog data.
+- Recommend ONLY assessments provided.
 - NEVER invent assessment names.
 - NEVER invent URLs.
-- ONLY use retrieved catalog information.
-- Refuse unrelated requests.
-- Keep answers concise and professional.
-- Explain recommendations clearly.
+- Keep responses concise.
 """
 
 
@@ -37,15 +33,26 @@ def generate_reply(user_query, retrieved_data):
 USER QUERY:
 {user_query}
 
-RETRIEVED SHL ASSESSMENTS:
+RETRIEVED DATA:
 {retrieved_data}
 
 TASK:
-- Explain why these assessments fit.
-- Stay grounded in retrieved data.
-- Keep response under 150 words.
+Explain why these assessments fit.
 """
 
-    response = model.generate_content(prompt)
+    try:
 
-    return response.text
+        response = model.generate_content(
+            prompt
+        )
+
+        return response.text
+
+    except Exception as e:
+
+        print(f"Gemini Error: {e}")
+
+        return (
+            "Based on your hiring requirements, "
+            "these SHL assessments are recommended."
+        )
