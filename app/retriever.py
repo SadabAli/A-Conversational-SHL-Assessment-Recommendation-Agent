@@ -1,16 +1,7 @@
 import json
-import faiss
-import numpy as np
 
-from sentence_transformers import SentenceTransformer
-
-model = SentenceTransformer(
-    "sentence-transformers/all-MiniLM-L6-v2"
-)
-
-index = faiss.read_index(
-    "vectorstore/shl.index"
-)
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 with open(
     "app/catalog.json",
@@ -19,6 +10,26 @@ with open(
 ) as f:
 
     catalog = json.load(f)
+
+documents = []
+
+for item in catalog:
+
+    text = f"""
+    {item.get('name', '')}
+    {item.get('description', '')}
+    {item.get('content', '')}
+    """
+
+    documents.append(text)
+
+vectorizer = TfidfVectorizer(
+    stop_words="english"
+)
+
+tfidf_matrix = vectorizer.fit_transform(
+    documents
+)
 
 
 def detect_test_type(text):
@@ -42,46 +53,48 @@ def detect_test_type(text):
 
 def search_assessments(
     query,
-    top_k=10
+    top_k=5
 ):
 
-    embedding = model.encode([query])
-
-    distances, indices = index.search(
-        np.array(embedding).astype("float32"),
-        top_k
+    query_vector = vectorizer.transform(
+        [query]
     )
+
+    similarities = cosine_similarity(
+        query_vector,
+        tfidf_matrix
+    ).flatten()
+
+    top_indices = similarities.argsort()[
+        ::-1
+    ][:top_k]
 
     results = []
 
     seen_urls = set()
 
-    for idx in indices[0]:
+    for idx in top_indices:
 
-        if idx < len(catalog):
+        item = catalog[idx]
 
-            item = catalog[idx]
+        if item["url"] in seen_urls:
+            continue
 
-            if item["url"] in seen_urls:
-                continue
+        seen_urls.add(item["url"])
 
-            seen_urls.add(item["url"])
+        combined_text = (
+            item.get("description", "")
+            + " "
+            + item.get("content", "")
+        )
 
-            combined_text = (
-                item.get("description", "")
-                + " "
-                + item.get("content", "")
-            )
-
-            test_type = detect_test_type(
+        results.append({
+            "name": item["name"],
+            "url": item["url"],
+            "description": item["description"],
+            "test_type": detect_test_type(
                 combined_text
             )
-
-            results.append({
-                "name": item["name"],
-                "url": item["url"],
-                "description": item["description"],
-                "test_type": test_type
-            })
+        })
 
     return results
