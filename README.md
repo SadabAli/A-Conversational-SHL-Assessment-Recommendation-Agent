@@ -393,8 +393,9 @@ Request:
   "end_of_conversation": true
 }
 ```
-<img width="1983" height="1064" alt="Screenshot 2026-05-15 082418" src="https://github.com/user-attachments/assets/ee0293dc-e65f-486e-b170-99789cd5515c" />
 <img width="1995" height="1059" alt="Screenshot 2026-05-15 082352" src="https://github.com/user-attachments/assets/47edab19-e3ef-44e9-af2a-b51604aee177" />
+<img width="1983" height="1064" alt="Screenshot 2026-05-15 082418" src="https://github.com/user-attachments/assets/ee0293dc-e65f-486e-b170-99789cd5515c" />
+
 <img width="1989" height="1055" alt="Screenshot 2026-05-15 082440" src="https://github.com/user-attachments/assets/068d3942-80fd-4b83-af48-ac7d4d7176d2" />
 
 
