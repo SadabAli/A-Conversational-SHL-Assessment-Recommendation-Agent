@@ -228,9 +228,9 @@ Refuses request
 ## Step 1 — Clone Repository
 
 ```bash
-git clone <your_github_repo_url>
+git clone https://github.com/SadabAli/A-Conversational-SHL-Assessment-Recommendation-Agent.git
 
-cd shl-assessment-agent
+cd A-Conversational-SHL-Assessment-Recommendation-Agent
 ```
 
 ---
