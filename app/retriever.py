@@ -21,6 +21,25 @@ with open(
     catalog = json.load(f)
 
 
+def detect_test_type(text):
+
+    text = text.lower()
+
+    if "personality" in text:
+        return "P"
+
+    if "cognitive" in text:
+        return "C"
+
+    if "technical" in text:
+        return "T"
+
+    if "behavior" in text:
+        return "B"
+
+    return "A"
+
+
 def search_assessments(
     query,
     top_k=10
@@ -35,16 +54,34 @@ def search_assessments(
 
     results = []
 
+    seen_urls = set()
+
     for idx in indices[0]:
 
         if idx < len(catalog):
 
             item = catalog[idx]
 
+            if item["url"] in seen_urls:
+                continue
+
+            seen_urls.add(item["url"])
+
+            combined_text = (
+                item.get("description", "")
+                + " "
+                + item.get("content", "")
+            )
+
+            test_type = detect_test_type(
+                combined_text
+            )
+
             results.append({
                 "name": item["name"],
                 "url": item["url"],
-                "description": item["description"]
+                "description": item["description"],
+                "test_type": test_type
             })
 
     return results
